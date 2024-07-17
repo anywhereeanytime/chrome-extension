@@ -1,15 +1,26 @@
-let myLeads = [];
-const buttonEl = document.getElementById("input-btn");
-const inputEl = document.getElementById("input-el");
-const deleteBtn = document.getElementById("delete-btn");
-const tabBtn = document.getElementById("tab-btn");
-const ulEl = document.getElementById("ul-el");
-const leadsFromLocalStorage = JSON.parse(localStorage.getItem("myLeads"));
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
+import {
+  getDatabase,
+  ref,
+  push,
+  onValue,
+  remove,
+} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-database.js";
+const firebaseConfig = {
+  databaseURL:
+    "https://leads-tracker-app-3a317-default-rtdb.asia-southeast1.firebasedatabase.app/",
+};
 
-if (leadsFromLocalStorage) {
-  myLeads = leadsFromLocalStorage;
-  render(myLeads);
-}
+const app = initializeApp(firebaseConfig);
+const database = getDatabase(app);
+const referenceInDB = ref(database, "leads");
+
+console.log(firebaseConfig.databaseURL);
+
+const inputEl = document.getElementById("input-el");
+const inputBtn = document.getElementById("input-btn");
+const ulEl = document.getElementById("ul-el");
+const deleteBtn = document.getElementById("delete-btn");
 
 function render(leads) {
   let listItems = "";
@@ -25,23 +36,21 @@ function render(leads) {
   ulEl.innerHTML = listItems;
 }
 
-buttonEl.addEventListener("click", function () {
-  myLeads.push(inputEl.value);
-  inputEl.value = "";
-  localStorage.setItem("myLeads", JSON.stringify(myLeads));
-  render(myLeads);
-});
-
-tabBtn.addEventListener("click", function () {
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    myLeads.push(tabs[0].url);
-    localStorage.setItem("myLeads", JSON.stringify(myLeads));
-    render(myLeads);
-  });
+onValue(referenceInDB, function (snapshot) {
+  const doesSnapshotExist = snapshot.exists();
+  if (doesSnapshotExist) {
+    const snapshotValues = snapshot.val();
+    const leads = Object.values(snapshotValues);
+    render(leads);
+  }
 });
 
 deleteBtn.addEventListener("dblclick", function () {
-  localStorage.clear();
-  myLeads = [];
-  render(myLeads);
+  remove(referenceInDB);
+  ulEl.innerHTML = "";
+});
+
+inputBtn.addEventListener("click", function () {
+  push(referenceInDB, inputEl.value);
+  inputEl.value = "";
 });
