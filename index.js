@@ -15,8 +15,6 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const referenceInDB = ref(database, "leads");
 
-console.log(firebaseConfig.databaseURL);
-
 const inputEl = document.getElementById("input-el");
 const inputBtn = document.getElementById("input-btn");
 const ulEl = document.getElementById("ul-el");
